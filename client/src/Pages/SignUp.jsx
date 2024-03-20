@@ -2,33 +2,42 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function SignUp() {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({});
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData({ ...formData, [id]: value });
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      // Your signup logic here...
-      // Example: Send formData to server and handle signup process
-      console.log('Form data:', formData);
+      setLoading(true);
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        setLoading(false);
+        setError(data.message);
+        return;
+      }
       setLoading(false);
-      setError('');
-      navigate('/'); // Redirect to home page after successful signup
+      setError(null);
+      navigate('/sign-in');
     } catch (error) {
-      setError(error.message);
       setLoading(false);
+      setError(error.message);
     }
   };
 
@@ -41,27 +50,21 @@ export default function SignUp() {
           placeholder='Username'
           className='border p-3 rounded-lg'
           id='username'
-          value={formData.username}
           onChange={handleChange}
-          required
         />
         <input
           type='email'
           placeholder='Email'
           className='border p-3 rounded-lg'
           id='email'
-          value={formData.email}
           onChange={handleChange}
-          required
         />
         <input
           type='password'
           placeholder='Password'
           className='border p-3 rounded-lg'
           id='password'
-          value={formData.password}
           onChange={handleChange}
-          required
         />
         <button
           disabled={loading}
